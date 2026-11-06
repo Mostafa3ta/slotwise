@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Slotwise
 
-## Getting Started
+A clinic appointment scheduler: book, move and resize appointments across providers, with overlap and working-hours checks and a next-free-slot finder.
 
-First, run the development server:
+[![CI](https://github.com/Mostafa3ta/slotwise/actions/workflows/ci.yml/badge.svg)](https://github.com/Mostafa3ta/slotwise/actions/workflows/ci.yml)
+
+**Live demo:** _coming soon_
+
+![Slotwise week view](docs/screenshot.png)
+
+## Features
+
+- **Week, day and month views** with working-hours shading, a now indicator, and a day view by default on phones
+- **Three providers**, each with their own hours and colour; filter the calendar by provider
+- **Book by clicking a free slot**, edit by clicking an appointment, delete from the dialog
+- **Drag to move, drag to resize**, with the same rules as the form
+- **Rules that can't be bypassed:** no overlaps per provider, nothing outside working hours, nothing in the past; every rejection says why
+- **Next available slot:** pick a provider and an appointment type, get the earliest free slot in the next seven working days, book it in one click
+- **Persists in the browser** (localStorage) with a one-click reset to fresh demo data
+- **Light and dark themes**, keyboard-accessible dialog and controls, reduced-motion safe
+
+## Stack
+
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui (Radix) · FullCalendar · React Hook Form + Zod · date-fns · Vitest + React Testing Library · Playwright · GitHub Actions · Cloudflare Pages
+
+## Key decisions
+
+**All scheduling rules are pure functions.** `lib/scheduling.ts` has no React and no storage: `overlaps`, `isWithinWorkingHours`, `validateBooking` and `findNextAvailable` take plain data and return plain results. That's why they have 19 unit tests that run in milliseconds, and why the booking form, the drag handler and the slot finder all enforce exactly the same rules. The trade-off is a little plumbing in the `Scheduler` component to pass data in.
+
+**FullCalendar, wrapped once and loaded late.** Building a draggable, resizable multi-view calendar from scratch is weeks of work for no interview value, so the demo uses FullCalendar. It's wrapped in a single `AppointmentCalendar` component that exposes four callbacks (`onSelectSlot`, `onSelectAppointment`, `onMove`, plus a provider filter); nothing else imports FullCalendar, so it could be swapped. It's also the heaviest dependency, so it's loaded with `next/dynamic` behind a skeleton: the page shell, filters and slot finder paint first, then the calendar.
+
+**Concurrent appointments side by side, not stacked.** FullCalendar's default stacks overlapping events, which hides one provider's booking behind another's in the "all providers" view and even blocks clicks on it. An end-to-end test caught that; `slotEventOverlap={false}` fixes it.
+
+**Demo data that is never empty.** The seed anchors to the weekday the calendar opens on (next Monday if today is a weekend), so the first screen always shows a full week, and the Playwright tests are deterministic.
+
+## Run and test
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
+npm test             # unit and component tests (Vitest)
+npm run test:e2e     # end-to-end tests in a real browser (Playwright), desktop and mobile
+npm run build        # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+On a new machine, install the Playwright browser once: `npx playwright install chromium`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Known limits
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- FullCalendar renders events and day headers as `<a>` elements without `href`, which Lighthouse's SEO audit flags as non-crawlable anchors. They're interactive controls in an app, not links, so this is accepted rather than worked around in the DOM.
 
-## Learn More
+## What I'd do next
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Recurring appointments and a waiting list for cancelled slots
+- A real backend with optimistic updates, so two receptionists can't double-book across devices
+- Patient search and history instead of free-text names
