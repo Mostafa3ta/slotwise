@@ -28,7 +28,20 @@ const SLOTS: Array<[number, number, number, number, number]> = [
   [-1, 10, 0, 0, 0], [-1, 14, 0, 1, 0], [-2, 9, 30, 2, 2],
 ]
 
-/** Returns the next weekday at or after `date` (Sat/Sun roll to Monday). */
+/**
+ * The weekday the demo treats as "today": the real day on Mon-Fri, otherwise next Monday.
+ * The calendar opens on this day, so seed data is always in view even on a weekend.
+ */
+export function demoAnchor(today: Date = new Date()): Date {
+  const d = new Date(today)
+  d.setHours(0, 0, 0, 0)
+  const day = d.getDay()
+  if (day === 6) d.setDate(d.getDate() + 2)
+  if (day === 0) d.setDate(d.getDate() + 1)
+  return d
+}
+
+/** Returns the next weekday at or after the given date (Sat/Sun roll to Monday). */
 function toWeekday(date: Date): Date {
   const d = new Date(date)
   const day = d.getDay()
@@ -37,7 +50,6 @@ function toWeekday(date: Date): Date {
   return d
 }
 
-/** Seed appointments anchored to the given "today" (defaults to now), so the demo is never empty. */
 export function seedAppointments(today: Date = new Date()): Appointment[] {
   const base = new Date(today)
   base.setHours(0, 0, 0, 0)
