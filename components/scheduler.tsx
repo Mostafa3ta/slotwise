@@ -5,7 +5,7 @@ import { Moon, RotateCcw, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { AppointmentCalendar } from '@/components/calendar/appointment-calendar'
+import dynamic from 'next/dynamic'
 import { ACCENT_CLASSES } from '@/components/calendar/colors'
 import { BookingDialog, type BookingFormValues } from '@/components/booking/booking-dialog'
 import { NextSlotPanel } from '@/components/booking/next-slot-panel'
@@ -15,6 +15,12 @@ import { validateBooking } from '@/lib/scheduling'
 import { loadAppointments, newId, resetAppointments, saveAppointments } from '@/lib/storage'
 import type { Appointment, AppointmentType, ProviderId } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+// FullCalendar is client-only and the heaviest dependency; load it after the page shell has painted.
+const AppointmentCalendar = dynamic(() => import('@/components/calendar/appointment-calendar').then((m) => m.AppointmentCalendar), {
+  ssr: false,
+  loading: () => <div className="h-[1000px] animate-pulse rounded-lg bg-muted sm:h-[1100px]" aria-label="Loading calendar" role="status" />,
+})
 
 type DialogState =
   | { open: false }
@@ -117,7 +123,7 @@ export function Scheduler() {
           ))}
           <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">{loaded ? `${visibleCount} appointments` : 'Loading…'}</span>
         </div>
-        <div className="rounded-xl border bg-card p-2 shadow-sm sm:p-4">
+        <div className="min-h-[1040px] rounded-xl border bg-card p-2 shadow-sm sm:min-h-[1140px] sm:p-4">
           {loaded && (
             <AppointmentCalendar
               appointments={appointments}

@@ -26,7 +26,7 @@ export function AppointmentCalendar({ appointments, providers, providerFilter, o
   const byId = useMemo(() => new Map(providers.map((p) => [p.id, p])), [providers])
   const initialDate = useMemo(() => demoAnchor(), [])
   // Phones get the day view: a five-column week is unreadable under ~640px.
-  const [isNarrow, setIsNarrow] = useState(false)
+  const [isNarrow, setIsNarrow] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches)
   const calendarRef = useRef<FullCalendar>(null)
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 639px)')
@@ -85,7 +85,7 @@ export function AppointmentCalendar({ appointments, providers, providerFilter, o
         ref={calendarRef}
         initialDate={initialDate}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
+        initialView={isNarrow ? 'timeGridDay' : 'timeGridWeek'}
         headerToolbar={isNarrow ? { left: 'prev,next', center: 'title', right: 'timeGridDay,dayGridMonth' } : { left: 'prev,next today', center: 'title', right: 'timeGridDay,timeGridWeek,dayGridMonth' }}
         titleFormat={isNarrow ? { month: 'short', day: 'numeric', year: 'numeric' } : undefined}
         buttonText={{ today: 'Today', day: 'Day', week: 'Week', month: 'Month' }}
