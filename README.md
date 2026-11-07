@@ -4,7 +4,7 @@ A clinic appointment scheduler: book, move and resize appointments across provid
 
 [![CI](https://github.com/Mostafa3ta/slotwise/actions/workflows/ci.yml/badge.svg)](https://github.com/Mostafa3ta/slotwise/actions/workflows/ci.yml)
 
-**Live demo:** _coming soon_
+**Live demo:** [slotwise-d21.pages.dev](https://slotwise-d21.pages.dev)
 
 ![Slotwise week view](docs/screenshot.png)
 
